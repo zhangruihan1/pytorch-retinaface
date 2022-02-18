@@ -5,6 +5,12 @@ A [PyTorch](https://pytorch.org/) implementation of [RetinaFace: Single-stage De
 ## Mobile or Edge device deploy
 We also provide a set of Face Detector for edge device in [here](https://github.com/biubug6/Face-Detector-1MB-with-landmark) from python training to C++ inference.
 
+## model inference accelerated by torchvision.io.read_image
+### requriements
+* torchvision >= 0.8.0
+
+### We implement accelerate detect code in demo.py based on detect.py, which use torchvision.io.read_image to data preprocessing, such as data normalize. for more details in [here](https://blog.csdn.net/cxx654/article/details/123011507)
+
 ## WiderFace Val Performance in single scale When using Resnet50 as backbone net.
 | Style | easy | medium | hard |
 |:-|:-:|:-:|:-:|

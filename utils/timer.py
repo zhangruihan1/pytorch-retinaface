@@ -6,6 +6,23 @@
 # --------------------------------------------------------
 
 import time
+import torch
+from functools import wraps
+
+
+def print_execute_info(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        torch.cuda.synchronize()
+        end_time = time.time()
+        duration_time = int((end_time - start_time) * 1000)
+        print("execute function %s, duration %s ms" % (func.__name__, duration_time))
+        return result
+
+    return wrapper
+
 
 
 class Timer(object):
