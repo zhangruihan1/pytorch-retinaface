@@ -17,7 +17,7 @@ from utils.box_utils import decode, decode_landm
 from imutils.video import FPS
 import torchvision
 from torchvision.io import read_image
-# from utils.timer import print_execute_info
+from utils.timer import print_execute_info
 
 
 class RetinaFaceDetector(object):
@@ -101,7 +101,7 @@ class RetinaFaceDetector(object):
         self.check_keys(self.net, pretrained_dict)
         self.net.load_state_dict(pretrained_dict, strict=False)
 
-    # @print_execute_info
+    @print_execute_info
     def detect(self, img):
         _, im_height, im_width = img.shape
 
@@ -147,14 +147,14 @@ class RetinaFaceDetector(object):
         scores = scores[inds]
 
         # keep top-K before NMS
-        order = scores.argsort()[::-1][:self..top_k]
+        order = scores.argsort()[::-1][:self.top_k]
         boxes = boxes[order]
         landms = landms[order]
         scores = scores[order]
 
         # do NMS
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
-        keep = py_cpu_nms(dets, self..nms_threshold)
+        keep = py_cpu_nms(dets, self.nms_threshold)
         # keep = nms(dets, args.nms_threshold,force_cpu=args.cpu)
         dets = dets[keep, :]
         landms = landms[keep]
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     data_path = "./images"
     output_path = "./outputs"
-    if os.path.exists(output_path) is False:
+    if os.path.exists(output_path):
         shutil.rmtree(output_path)
     os.makedirs(output_path)
 

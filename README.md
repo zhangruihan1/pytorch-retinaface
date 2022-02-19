@@ -9,7 +9,45 @@ We also provide a set of Face Detector for edge device in [here](https://github.
 ### requriements
 * torchvision >= 0.8.0
 
-### We implement accelerate detect code in demo.py based on detect.py, which use torchvision.io.read_image to data preprocessing, such as data normalize. for more details in [here](https://blog.csdn.net/cxx654/article/details/123011507)
+We implement accelerate detect code in demo.py based on detect.py, which use torchvision.io.read_image to data preprocessing, such as data normalize. for more details in [here](https://blog.csdn.net/cxx654/article/details/123011507).The performance improvement is shown in the following table:<br />
+<table border="1">
+    <tr>
+        <th></th>
+        <th colspan="3">before</th>
+		<th colspan="3">after</th>
+		<th rowspan="2">result</th>
+    </tr>
+    <tr>
+        <td>resolution</td>
+        <td>fps</td>
+        <td>total time(s)</td>
+        <td>avg time(ms)</td>
+        <td>fps</td>
+        <td>total time(s)</td>
+        <td>avg time(ms)</td>
+    </tr>
+    <tr>
+        <td>1920x1080</td>
+        <td>5.92</td>
+        <td>134</td>
+        <td>168</td>
+        <td>8.84</td>
+        <td>90</td>
+		<td>113</td>
+		<td>32.7%</td>
+    </tr>
+    <tr>
+		<td>1280x720</td>
+        <td>13.08</td>
+        <td>256</td>
+        <td>76</td>
+        <td>19.49</td>
+        <td>172</td>
+        <td>51</td>
+		<td>32.8%</td>
+    </tr>
+</table>
+
 
 ## WiderFace Val Performance in single scale When using Resnet50 as backbone net.
 | Style | easy | medium | hard |
