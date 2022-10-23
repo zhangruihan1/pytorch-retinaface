@@ -9,7 +9,7 @@ We also provide a set of Face Detector for edge device in [here](https://github.
 ### requriements
 * torchvision >= 0.8.0
 
-We implement accelerate detect code in demo.py based on detect.py, which use torchvision.io.read_image to data preprocessing, such as data normalize. for more details in [here](https://blog.csdn.net/cxx654/article/details/123011507).The performance improvement is shown in the following table:<br />
+We implement accelerate detect code in demo.py based on detect.py, which use torchvision.io.read_image to data preprocessing, such as data normalize. for more details in [here](https://blog.csdn.net/cxx654/article/details/123011507) and [here](https://blog.csdn.net/cxx654/article/details/127478887).The performance improvement is shown in the following table:<br />
 <table border="1">
     <tr>
         <th></th>

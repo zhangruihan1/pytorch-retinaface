@@ -4,11 +4,12 @@ import argparse
 import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
-from data import cfg_mnet, cfg_re50
+from data import cfg_mnet, cfg_re50, cfg_re50_pruned
 from layers.functions.prior_box import PriorBox
 from utils.nms.py_cpu_nms import py_cpu_nms
+from utils.nms.py_gpu_nms import py_gpu_nms
 import cv2
-from models.retinaface import RetinaFace
+from models.retinaface import RetinaFace, RetinaFacePruned
 from utils.box_utils import decode, decode_landm
 import time
 
@@ -24,6 +25,8 @@ parser.add_argument('--nms_threshold', default=0.4, type=float, help='nms_thresh
 parser.add_argument('--keep_top_k', default=750, type=int, help='keep_top_k')
 parser.add_argument('-s', '--save_image', action="store_true", default=True, help='show detection results')
 parser.add_argument('--vis_thres', default=0.6, type=float, help='visualization_threshold')
+parser.add_argument('--fpn_pruned', action="store_true", default=False, help='Use FPN Pruned')
+parser.add_argument('--nms_gpu', action="store_true", default=True, help='Use GPU NMS')
 args = parser.parse_args()
 
 
@@ -68,10 +71,13 @@ if __name__ == '__main__':
     cfg = None
     if args.network == "mobile0.25":
         cfg = cfg_mnet
+    elif args.network == "resnet50" and args.fpn_pruned:
+        cfg = cfg_re50_pruned
+        net = RetinaFacePruned(cfg=cfg, phase='test')
     elif args.network == "resnet50":
         cfg = cfg_re50
-    # net and model
-    net = RetinaFace(cfg=cfg, phase = 'test')
+        net = RetinaFace(cfg=cfg, phase='test')
+
     net = load_model(net, args.trained_model, args.cpu)
     net.eval()
     print('Finished loading model!')
@@ -131,7 +137,10 @@ if __name__ == '__main__':
 
         # do NMS
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
-        keep = py_cpu_nms(dets, args.nms_threshold)
+        if args.nms_gpu:
+            keep = py_gpu_nms(dets, args.nms_threshold)
+        else:
+            keep = py_cpu_nms(dets, args.nms_threshold)
         # keep = nms(dets, args.nms_threshold,force_cpu=args.cpu)
         dets = dets[keep, :]
         landms = landms[keep]
@@ -165,4 +174,3 @@ if __name__ == '__main__':
 
             name = "test.jpg"
             cv2.imwrite(name, img_raw)
-

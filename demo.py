@@ -9,10 +9,11 @@ import torch
 from torch import nn
 import torch.backends.cudnn as cudnn
 import numpy as np
-from data import cfg_mnet, cfg_re50
+from data import cfg_mnet, cfg_re50, cfg_re50_pruned
 from layers.functions.prior_box import PriorBox
 from utils.nms.py_cpu_nms import py_cpu_nms
-from models.retinaface import RetinaFace
+from utils.nms.py_gpu_nms import py_gpu_nms
+from models.retinaface import RetinaFace, RetinaFacePruned
 from utils.box_utils import decode, decode_landm
 from imutils.video import FPS
 import torchvision
@@ -22,7 +23,8 @@ from utils.timer import print_execute_info
 
 class RetinaFaceDetector(object):
     def __init__(self, trained_model, network, use_cpu=False, confidence_threshold=0.02, top_k=5000,
-                 nms_threshold=0.4, keep_top_k=750, vis_thres=0.6, im_height=720, im_width=1280):
+                 nms_threshold=0.4, keep_top_k=750, vis_thres=0.6, im_height=720, im_width=1280,
+                 fpn_pruned=False, nms_gpu=True):
         super(RetinaFaceDetector, self).__init__()
         self.trained_model = trained_model
         self.network = network
@@ -34,6 +36,8 @@ class RetinaFaceDetector(object):
         self.vis_thres = vis_thres
         self.im_height = im_height
         self.im_width = im_width
+        self.fpn_pruned = fpn_pruned
+        self.nms_gpu = nms_gpu
         self.device = torch.device("cpu" if self.use_cpu else "cuda")
         self.norm = torchvision.transforms.Normalize(mean=[104.0, 117.0, 123.0], std=[1.0, 1.0, 1.0])
 
@@ -41,10 +45,15 @@ class RetinaFaceDetector(object):
         self.cfg = None
         if self.network == "mobile0.25":
             self.cfg = cfg_mnet
+        elif self.network == "resnet50" and self.fpn_pruned:
+            self.cfg = cfg_re50_pruned
         elif self.network == "resnet50":
             self.cfg = cfg_re50
 
-        self.net = RetinaFace(cfg=self.cfg, phase="test")
+        if self.fpn_pruned:
+            self.net = RetinaFacePruned(cfg=self.cfg, phase="test")
+        else:
+            self.net = RetinaFace(cfg=self.cfg, phase="test")
         self.load_model(self.trained_model, self.use_cpu)
         self.net.eval()
         print(self.net)
@@ -154,7 +163,10 @@ class RetinaFaceDetector(object):
 
         # do NMS
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
-        keep = py_cpu_nms(dets, self.nms_threshold)
+        if self.nms_gpu:
+            keep = py_gpu_nms(dets, self.nms_threshold)
+        else:
+            keep = py_cpu_nms(dets, self.nms_threshold)
         # keep = nms(dets, args.nms_threshold,force_cpu=args.cpu)
         dets = dets[keep, :]
         landms = landms[keep]
