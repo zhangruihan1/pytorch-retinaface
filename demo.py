@@ -9,7 +9,7 @@ import torch
 from torch import nn
 import torch.backends.cudnn as cudnn
 import numpy as np
-from data import cfg_mnet, cfg_re50, cfg_re50_pruned
+from data import cfg_mnet, cfg_re50, cfg_re50_pruned, cfg_mnet_pruned
 from layers.functions.prior_box import PriorBox
 from utils.nms.py_cpu_nms import py_cpu_nms
 from utils.nms.py_gpu_nms import py_gpu_nms
@@ -43,7 +43,9 @@ class RetinaFaceDetector(object):
 
         torch.set_grad_enabled(False)
         self.cfg = None
-        if self.network == "mobile0.25":
+        if self.network == "mobile0.25" and self.fpn_pruned:
+            self.cfg = cfg_mnet_pruned
+        elif self.network == "mobile0.25":
             self.cfg = cfg_mnet
         elif self.network == "resnet50" and self.fpn_pruned:
             self.cfg = cfg_re50_pruned

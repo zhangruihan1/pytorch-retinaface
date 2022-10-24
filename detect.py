@@ -4,7 +4,7 @@ import argparse
 import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
-from data import cfg_mnet, cfg_re50, cfg_re50_pruned
+from data import cfg_mnet, cfg_re50, cfg_re50_pruned, cfg_mnet_pruned
 from layers.functions.prior_box import PriorBox
 from utils.nms.py_cpu_nms import py_cpu_nms
 from utils.nms.py_gpu_nms import py_gpu_nms
@@ -69,13 +69,18 @@ def load_model(model, pretrained_path, load_to_cpu):
 if __name__ == '__main__':
     torch.set_grad_enabled(False)
     cfg = None
-    if args.network == "mobile0.25":
+    if args.network == "mobile0.25" and args.fpn_pruned:
+        cfg = cfg_mnet_pruned
+    elif args.network == "mobile0.25":
         cfg = cfg_mnet
     elif args.network == "resnet50" and args.fpn_pruned:
         cfg = cfg_re50_pruned
-        net = RetinaFacePruned(cfg=cfg, phase='test')
     elif args.network == "resnet50":
         cfg = cfg_re50
+
+    if args.fpn_pruned:
+        net = RetinaFacePruned(cfg=cfg, phase='test')
+    else:
         net = RetinaFace(cfg=cfg, phase='test')
 
     net = load_model(net, args.trained_model, args.cpu)
