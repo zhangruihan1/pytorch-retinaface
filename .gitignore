@@ -1,0 +1,4 @@
+weights/*.pth
+__py*
+__py*/*
+*/__py*/*

@@ -58,7 +58,7 @@ class RetinaFaceDetector(object):
             self.net = RetinaFace(cfg=self.cfg, phase="test")
         self.load_model(self.trained_model, self.use_cpu)
         self.net.eval()
-        print(self.net)
+        # print(self.net)
         cudnn.benchmark = True
 
         self.net = self.net.to(self.device)
