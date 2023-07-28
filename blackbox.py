@@ -48,10 +48,14 @@ def py_gpu_nms(dets, nms_thresh):
 class RetinaFaceDetector(RetinaFaceDetector_):
     def __init__(self, trained_model, network, use_cpu=False, confidence_threshold=0.02, top_k=5000,
                  nms_threshold=0.4, keep_top_k=750, vis_thres=0.6, im_height=720, im_width=1280,
-                 fpn_pruned=False, nms_gpu=True):
+                 fpn_pruned=False, nms_gpu=True, training = False):
         super(RetinaFaceDetector, self).__init__(trained_model, network, use_cpu, confidence_threshold, top_k,
                  nms_threshold, keep_top_k, vis_thres, im_height, im_width,
                  fpn_pruned, nms_gpu)
+        self.training = training
+
+    def __call__(self, img):
+        return self.batch_detect(img * 255)
 
     def batch_detect(self, img):
         _, _, im_height, im_width = img.shape
@@ -132,13 +136,19 @@ class RetinaFaceDetector(RetinaFaceDetector_):
             dets = dets[:self.keep_top_k, :4]
             # landms = landms[:self.keep_top_k, :]
 
-            batch_dets_.append(dets.cpu().numpy().astype(int))
+            batch_dets_.append(dets.long())#.numpy().astype(int))
 
         # dets = np.concatenate((dets, landms), axis=1)
+        batch_dets_ = torch.nn.utils.rnn.pad_sequence(batch_dets_, batch_first=True, padding_value=-1)
         
         return batch_dets_
 
+    def eval(self):
+        return self.net
+
 
 def retinaface_resnet50(ckpt):
-    detector =  RetinaFaceDetector(trained_model=ckpt, network="resnet50", im_height=250, im_width=250, keep_top_k=1)
-    return lambda x: detector.batch_detect(x * 255)
+    detect = RetinaFaceDetector(trained_model=ckpt, network="resnet50", im_height=250, im_width=250, keep_top_k=1)
+    if 'retinaface_resnet50_2020-07-20' in ckpt:
+        detect.norm = torchvision.transforms.Normalize(mean=(123.675, 116.28 , 103.53), std=(58.395, 57.12 , 57.375))
+    return detect
