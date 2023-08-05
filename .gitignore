@@ -1,4 +1,10 @@
-weights/*.pth
+weights/*
 __py*
 __py*/*
 */__py*/*
+data/widerface/*
+widerface_evaluate/build/*
+widerface_evaluate/wider*/*
+*/*.so
+*/*.pyx
+*/*.c
